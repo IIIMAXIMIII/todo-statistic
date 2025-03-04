@@ -12,6 +12,7 @@ function getFiles() {
 }
 
 function processCommand(command) {
+    [command, arg] = command.split(' ');
     switch (command) {
         case 'show':
             console.log(showTODO());
@@ -21,6 +22,10 @@ function processCommand(command) {
             break
         case 'exit':
             process.exit(0);
+            break;
+        case 'user':
+            const comment = GetTODOWithName(arg);
+            console.log(comment);
             break;
         default:
             console.log('wrong command');
@@ -60,4 +65,23 @@ function showImportantTODO(){
     }
 
     return result;
+}
+
+function GetTODOWithName(name) {
+    const regex = /\/\/ TODO\s+([^;]+);\s*([^;]+);\s*(.+)/;
+
+    const arr = []
+    for (const file of files) {
+        const match = file.match(regex);
+
+        if (match) {
+            const author = match[1].trim();
+
+            if (author === name) {
+                arr.push(match[0]);
+            }
+        }
+    }
+
+    return arr;
 }

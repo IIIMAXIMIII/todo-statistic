@@ -20,14 +20,17 @@ function processCommand(command) {
         case 'important':
             console.log(showImportantTODO());
             break
-        case 'exit':
-            process.exit(0);
-            break;
         case 'user':
             console.log(GetTODOWithName(arg.join(' ').toLowerCase().concat()));
             break;
+        case 'sort':
+            console.log(showSortedTODO(arg[0]))
+            break;
         case 'date':
             console.log(GetTODOAfterDate(arg[0]));
+            break;
+        case 'exit':
+            process.exit(0);
             break;
         default:
             console.log('wrong command');
@@ -35,7 +38,7 @@ function processCommand(command) {
     }
 }
 
-function showTODO(){
+function showTODO() {
     const result = [];
 
     const regex = /(?<=^\s*(?:\/\/|\/\*)\s*)TODO\b.*/gm;
@@ -51,14 +54,14 @@ function showTODO(){
     return result;
 }
 
-function showImportantTODO(){
+function showImportantTODO() {
     const todoLists = showTODO();
     const result = [];
 
-    for (const todoList of todoLists){
+    for (const todoList of todoLists) {
         const resultTodos = [];
-        for (const todo of todoList){
-            if (todo.endsWith('!')){
+        for (const todo of todoList) {
+            if (todo.endsWith('!')) {
                 resultTodos.push(todo);
             }
         }
@@ -72,16 +75,16 @@ function showImportantTODO(){
 function GetTODOWithName(name) {
     const todoLists = showTODO();
     const arr = []
-    for (const todoList of todoLists){
+    for (const todoList of todoLists) {
         const resultTodos = [];
-        for (const todo of todoList){
+        for (const todo of todoList) {
             const nameTodo = todo.split(';')[0].split(' ').slice(1).join(' ').concat();
-            if (nameTodo.toLowerCase() === name){
+            if (nameTodo.toLowerCase() === name) {
                 resultTodos.push(todo);
             }
         }
 
-        if (resultTodos.length > 0){
+        if (resultTodos.length > 0) {
             arr.push(resultTodos);
         }
     }
@@ -123,5 +126,88 @@ function parseDate(dateString) {
     const day = parts[2] ? parseInt(parts[2], 10) : 1;
 
     return new Date(year, month, day);
+}
+
+function showSortedTODO(arg) {
+    const todoLists = showTODO();
+    if (arg === 'user') {
+        return showUserTODO(todoLists);
+    } else if (arg === 'importance') {
+        return showSortImportantTODO(todoLists);
+    }
+    else if (arg === 'date'){
+        return showDateTODO(todoLists);
+    }
+}
+
+function showSortImportantTODO(todoLists) {
+    let result = new Map();
+
+    for (const todoList of todoLists) {
+        for (const todo of todoList) {
+            result.set(todo, countSymbols(todo));
+        }
+    }
+
+    return [...result.entries()]
+        .sort((a, b) => b[1] - a[1])
+        .map(entry => entry[0]);
+}
+
+
+function countSymbols(arr) {
+    const counter = new Map();
+
+    for (const item of arr) {
+        if (counter.has(item)) {
+            counter.set(item, counter.get(item) + 1);
+            continue;
+        }
+
+        counter.set(item, 1);
+    }
+
+    if (counter.has("!"))
+        return counter.get("!");
+    return 0;
+}
+
+function showUserTODO(todoLists) {
+    const counter = new Map();
+
+    for (const todoList of todoLists) {
+        for (const todo of todoList) {
+            const nameTodo = todo.split(';')[0].split(' ').slice(1).join(' ').concat().toLowerCase();
+            if (counter.has(nameTodo)) {
+                counter.get(nameTodo).push(todo)
+                continue;
+            }
+
+            counter.set(nameTodo, [todo]);
+        }
+    }
+
+    return counter;
+}
+
+function showDateTODO(todoLists) {
+    const counter = new Map();
+    const regex = /TODO\s+([^;]+);\s*([^;]+);\s*(.+)/;
+    for (const todoList of todoLists) {
+        for (const todo of todoList) {
+            const match = todo.match(regex);
+            if (match) {
+                const date = parseDate(match[2].trim());
+                if (counter.has(date)) {
+                    counter.get(date).push(todo)
+                    continue;
+                }
+
+                counter.set(date, [todo])
+            }
+        }
+    }
+
+    return new Map([...counter.entries()].sort((a, b) => new Date(a[0]) - new Date(b[0])));
 }
 

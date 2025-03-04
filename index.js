@@ -26,6 +26,9 @@ function processCommand(command) {
         case 'user':
             console.log(GetTODOWithName(arg.join(' ').toLowerCase().concat()));
             break;
+        case 'date':
+            console.log(GetTODOAfterDate(arg[0]));
+            break;
         default:
             console.log('wrong command');
             break;
@@ -85,3 +88,40 @@ function GetTODOWithName(name) {
 
     return arr;
 }
+
+function GetTODOAfterDate(dateInput) {
+    dateInput = parseDate(dateInput);
+    const allTodo = showTODO();
+    const regex = /TODO\s+([^;]+);\s*([^;]+);\s*(.+)/;
+
+    let result = [];
+    for (const todoInFile of allTodo) {
+        let todoArr = []
+        for (const todo of todoInFile) {
+            const match = todo.match(regex);
+            if (match) {
+                const date = parseDate(match[2].trim());
+                if (date > dateInput) {
+                    todoArr.push(todo)
+                }
+            }
+        }
+
+        if (todoArr.length > 0) {
+            result.push(todoArr)
+        }
+    }
+
+    return result;
+}
+
+function parseDate(dateString) {
+    const parts = dateString.split('-');
+
+    const year = parseInt(parts[0], 10);
+    const month = parts[1] ? parseInt(parts[1], 10) - 1 : 0;
+    const day = parts[2] ? parseInt(parts[2], 10) : 1;
+
+    return new Date(year, month, day);
+}
+

@@ -13,6 +13,12 @@ function getFiles() {
 
 function processCommand(command) {
     switch (command) {
+        case 'show':
+            console.log(showTODO());
+            break;
+        case 'important':
+            console.log(showImportantTODO());
+            break
         case 'exit':
             process.exit(0);
             break;
@@ -22,4 +28,36 @@ function processCommand(command) {
     }
 }
 
-// TODO you can do it!
+function showTODO(){
+    const result = [];
+
+    const regex = /(?<=^\s*(?:\/\/|\/\*)\s*)TODO\b.*/gm;
+
+    for (const fileText of files) {
+        const matches = fileText.match(regex);
+
+        if (matches !== null) {
+            result.push(matches);
+        }
+    }
+
+    return result;
+}
+
+function showImportantTODO(){
+    const todoLists = showTODO();
+    const result = [];
+
+    for (const todoList of todoLists){
+        const resultTodos = [];
+        for (const todo of todoList){
+            if (todo.endsWith('!')){
+                resultTodos.push(todo);
+            }
+        }
+
+        result.push(resultTodos);
+    }
+
+    return result;
+}
